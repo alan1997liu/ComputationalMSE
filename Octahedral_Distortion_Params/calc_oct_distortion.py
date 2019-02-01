@@ -159,7 +159,6 @@ tilting_distortion, inPlane_distortion, outPlane_distortion = \
 volume = eval(input("Type in volume of octahedral from VESTA: "))
 octahedral_elongation = octahedral_elongation(octahedral_array, volume)
 
-
 # Supercell the structure
 struct.make_supercell([[1, 0, 0], [0, 1, 0], [0, 0, 2]])
 supercell_lattice_vectors = struct.lattice
