@@ -39,7 +39,7 @@ def getSpeciesInfo(species_array):
 # 1. The center Pb-index as the first element. 
 # 2. The 6 I-indexes as the next six elements
 def get_octahedrals(Pb_indexes, I_indexes, coord_num):
-    octahedral_array = []
+    octahedron_array = []
     for Pb_index in Pb_indexes:
         I_indexes_distances = {}
         for I_index in I_indexes:
@@ -54,10 +54,10 @@ def get_octahedrals(Pb_indexes, I_indexes, coord_num):
                     if I_indexes_distances[k] == value and k not in \
                     octahedral_indices]
             octahedral_indices.extend(closest_I_index)
-        octahedral_array.append(octahedral_indices)
-    return octahedral_array
+        octahedron_array.append(octahedral_indices)
+    return octahedron_array
 
-def calc_DistortionAngles(octahedral_array, struct):
+def calc_DistortionAngles(octahedron_array, struct):
     # To calculate the in-plane distortion angle, we must first calculate
     # the projection of the Pb-I vector onto the Pb-plane. Then, we must
     # calculate the angle from the dot product of Pb-Pb and the projected
@@ -110,17 +110,17 @@ def calc_DistortionAngles(octahedral_array, struct):
         return outPlaneAngle
     
     # Calculates bond angles that matches up to VESTA bond angles
-    def tiltingAngle_and_correctIodine(octahedral_array):
+    def tiltingAngle_and_correctIodine(octahedron_array):
         #Get all the shared iodines (there should be 4)
         shared_iodines = []
-        for j in range(1, len(octahedral_array[0])):
-            if octahedral_array[0][j] in octahedral_array[3] and \
-                    octahedral_array[0][j] not in shared_iodines:
-                shared_iodines.append(octahedral_array[0][j])
+        for j in range(1, len(octahedron_array[0])):
+            if octahedron_array[0][j] in octahedron_array[3] and \
+                    octahedron_array[0][j] not in shared_iodines:
+                shared_iodines.append(octahedron_array[0][j])
         #Get the correct iodine that is within the unit cell!
         for shared_iodine in shared_iodines:
-            bond_angle = struct.get_angle(octahedral_array[0][0], \
-                shared_iodine, octahedral_array[3][0]) 
+            bond_angle = struct.get_angle(octahedron_array[0][0], \
+                shared_iodine, octahedron_array[3][0]) 
             if bond_angle > 100:
                 correct_bond_angle = bond_angle
                 shared_iodine_index = shared_iodine
@@ -129,10 +129,10 @@ def calc_DistortionAngles(octahedral_array, struct):
 
     Pb_coords = []
     for i in range(0, 4):
-        Pb_coords.append(struct[octahedral_array[i][0]].coords)
+        Pb_coords.append(struct[octahedron_array[i][0]].coords)
 
     tilting_Angle, shared_iodine_index = \
-            tiltingAngle_and_correctIodine(octahedral_array)
+            tiltingAngle_and_correctIodine(octahedron_array)
     I_coord = struct[shared_iodine_index].coords
     print(tilting_Angle)
     tilting_distortion = 180 - tilting_Angle
@@ -141,8 +141,11 @@ def calc_DistortionAngles(octahedral_array, struct):
     print(tilting_distortion, inPlane_distortion, outPlane_distortion)
     return tilting_distortion, inPlane_distortion, outPlane_distortion
 
-def octahedral_elongation(octahedral_array, volume):
-    return 
+def octahedral_elongation(octahedron, volume):
+    octahedron_edge = (3*volume/(2**(1/2)))**(1/3)
+    d0 = octahedron_edge*(1/(2**(0.5)))
+    total = 0
+    
 
 
 #---------------------------------------------------------------------------
@@ -151,17 +154,15 @@ struct = vasp.inputs.Poscar.from_file("PBE_CONTCAR").structure
 species_arr = struct.species
 Pb_indexes, I_indexes, Pb_coords, I_coords = getSpeciesInfo(species_arr)
 Pb_coordination = 6
-octahedral_array = get_octahedrals(Pb_indexes, I_indexes, Pb_coordination)
+octahedron_array = get_octahedrals(Pb_indexes, I_indexes, Pb_coordination)
 
 tilting_distortion, inPlane_distortion, outPlane_distortion = \
-        calc_DistortionAngles(octahedral_array, struct)
+        calc_DistortionAngles(octahedron_array, struct)
 
-volume = eval(input("Type in volume of octahedral from VESTA: "))
-octahedral_elongation = octahedral_elongation(octahedral_array, volume)
 
 # Supercell the structure
 struct.make_supercell([[1, 0, 0], [0, 1, 0], [0, 0, 2]])
 supercell_lattice_vectors = struct.lattice
 supercell_species_arr = struct.species
 Pb_indexes, I_indexes, Pb_coords, I_coords = getSpeciesInfo(supercell_species_arr)
-octahedral_array = get_octahedrals(Pb_indexes, I_indexes, Pb_coordination)
+octahedron_array = get_octahedrals(Pb_indexes, I_indexes, Pb_coordination)
