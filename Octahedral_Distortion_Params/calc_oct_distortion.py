@@ -159,8 +159,9 @@ octahedron_array = get_octahedrals(Pb_indexes, I_indexes, Pb_coordination)
 tilting_distortion, inPlane_distortion, outPlane_distortion = \
         calc_DistortionAngles(octahedron_array, struct)
 
-
-# Supercell the structure
+# Supercell the structure. 
+# In order to calculate the distortions of all four bonds. You have to
+# supercell the structure and impose periodic boundary conditions.
 struct.make_supercell([[1, 0, 0], [0, 1, 0], [0, 0, 2]])
 supercell_lattice_vectors = struct.lattice
 supercell_species_arr = struct.species
