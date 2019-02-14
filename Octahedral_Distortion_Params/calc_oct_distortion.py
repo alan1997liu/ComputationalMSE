@@ -11,7 +11,7 @@ from numpy import linalg as linalg
 # We want to get the indexes of all the atoms in the species_array of the
 # same atom type, basically. 
 
-def getSpeciesInfo(species_array):
+def getSpeciesInfo(species_arr):
     Pb_indexes = []   
     I_indexes = []
     Pb_nearest_neighbors = []
@@ -57,7 +57,7 @@ def get_octahedrals(Pb_indexes, I_indexes, coord_num):
         octahedron_array.append(octahedral_indices)
     return octahedron_array
 
-def calc_DistortionAngles(octahedron_array, struct):
+def calc_DistortionAngles(unitcell_array, struct, ):
     # To calculate the in-plane distortion angle, we must first calculate
     # the projection of the Pb-I vector onto the Pb-plane. Then, we must
     # calculate the angle from the dot product of Pb-Pb and the projected
@@ -110,17 +110,17 @@ def calc_DistortionAngles(octahedron_array, struct):
         return outPlaneAngle
     
     # Calculates bond angles that matches up to VESTA bond angles
-    def tiltingAngle_and_correctIodine(octahedron_array):
+    def tiltingAngle_and_correctIodine(unitcell_array):
         #Get all the shared iodines (there should be 4)
         shared_iodines = []
-        for j in range(1, len(octahedron_array[0])):
-            if octahedron_array[0][j] in octahedron_array[3] and \
-                    octahedron_array[0][j] not in shared_iodines:
-                shared_iodines.append(octahedron_array[0][j])
+        for j in range(1, len(unitcell_array[0])):
+            if unitcell_array[0][j] in unitcell_array[3] and \
+                    unitcell_array[0][j] not in shared_iodines:
+                shared_iodines.append(unitcell_array[0][j])
         #Get the correct iodine that is within the unit cell!
         for shared_iodine in shared_iodines:
-            bond_angle = struct.get_angle(octahedron_array[0][0], \
-                shared_iodine, octahedron_array[3][0]) 
+            bond_angle = struct.get_angle(unitcell_array[0][0], \
+                shared_iodine, unitcell_array[3][0]) 
             if bond_angle > 100:
                 correct_bond_angle = bond_angle
                 shared_iodine_index = shared_iodine
@@ -129,10 +129,10 @@ def calc_DistortionAngles(octahedron_array, struct):
 
     Pb_coords = []
     for i in range(0, 4):
-        Pb_coords.append(struct[octahedron_array[i][0]].coords)
+        Pb_coords.append(struct[unitcell_array[i][0]].coords)
 
     tilting_Angle, shared_iodine_index = \
-            tiltingAngle_and_correctIodine(octahedron_array)
+            tiltingAngle_and_correctIodine(unitcell_array)
     I_coord = struct[shared_iodine_index].coords
     print(tilting_Angle)
     tilting_distortion = 180 - tilting_Angle
@@ -151,19 +151,28 @@ def octahedral_elongation(octahedron, volume):
 #---------------------------------------------------------------------------
 
 struct = vasp.inputs.Poscar.from_file("PBE_CONTCAR").structure
+Pb_coordination = 6
 species_arr = struct.species
 Pb_indexes, I_indexes, Pb_coords, I_coords = getSpeciesInfo(species_arr)
-Pb_coordination = 6
 octahedron_array = get_octahedrals(Pb_indexes, I_indexes, Pb_coordination)
-
+print(octahedron_array)
 tilting_distortion, inPlane_distortion, outPlane_distortion = \
         calc_DistortionAngles(octahedron_array, struct)
+
 
 # Supercell the structure. 
 # In order to calculate the distortions of all four bonds. You have to
 # supercell the structure and impose periodic boundary conditions.
-struct.make_supercell([[1, 0, 0], [0, 1, 0], [0, 0, 2]])
+struct.make_supercell([[2, 0, 0], [0, 2, 0], [0, 0, 2]])
 supercell_lattice_vectors = struct.lattice
 supercell_species_arr = struct.species
 Pb_indexes, I_indexes, Pb_coords, I_coords = getSpeciesInfo(supercell_species_arr)
 octahedron_array = get_octahedrals(Pb_indexes, I_indexes, Pb_coordination)
+unitcells_array = []
+unitcells_array.append(octahedron_array[0])
+unitcells_array.append(octahedron_array[0 + 8])
+unitcells_array.append(octahedron_array[0 + 16])
+unitcells_array.append(octahedron_array[0 + 24])
+tilting_distortion, inPlane_distortion, outPlane_distortion = \
+        calc_DistortionAngles(unitcells_array, struct)
+print(unitcells_array)
