@@ -246,4 +246,6 @@ struct2_species = struct2.species
 Pb_indexes, I_indexes, Pb_coords, I_coords = getSpeciesInfo(struct2_species)
 octahedral_array = get_octahedrals(Pb_indexes, I_indexes, Pb_coordination)
 center_octahedrals = get_center_octahedrals(octahedral_array)
+# Function call that outputs things to the terminal
 get_distortion_info(center_octahedrals, octahedral_array, struct2)
+
