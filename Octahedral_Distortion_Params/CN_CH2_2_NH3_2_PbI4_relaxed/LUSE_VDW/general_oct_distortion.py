@@ -214,7 +214,11 @@ def get_distortion_info(center_octahedrals, octahedral_array, struct):
             tiltingArr.append(tiltDistortion)
         avgIn, avgOut, avgTilt = angleStats(inPlaneArr, outPlaneArr, tiltingArr)
         bond_distortion = bond_length_distortion(center_octahedrals[i], struct)
-        print(avgIn, avgOut, avgTilt, bond_distortion)
+
+        with open('data.csv', 'a', newline = '') as csv_file:
+            data_writer = csv.writer(csv_file, delimiter = ",", quotechar = '"', \
+                    quoting = csv.QUOTE_MINIMAL)
+            data_writer.writerow([filename, i, avgIn, avgOut, avgTilt, bond_distortion])
         
         #*** HAVE TO FINISH UP THIS METHOD!
         #octahedral_elongation = octahedral_elongation(center_octahedrals[i], \
@@ -268,11 +272,12 @@ X_atom = sys.argv[3]
 
 struct = vasp.inputs.Poscar.from_file(filename).structure
 B_coordination = 6
-print("Information for:", filename)
+# print("Information for:", filename)
 
 # Supercell the structure. 
 # Xn order to calculate the distortions of all four bonds. You have to
 # supercell the structure and impose periodic boundary conditions.
+# You can choose how to supercell, just vary the numbers a, b, and c.
 a = 3
 b = 3
 c = 3
@@ -290,5 +295,5 @@ center_octahedrals = get_center_octahedrals(octahedral_array, numUnitCells)
 # parameters of interest in an organized fashion on the terminal.
 get_distortion_info(center_octahedrals, octahedral_array, struct)
 
-print("End of distortion information")
-print()
+#print("End of distortion information")
+#print()
