@@ -188,6 +188,9 @@ def get_shared_X(select_octahedral, octahedral_array):
 # This function gets the coordinates of all the B atoms that share an
 # iodine with the center B atom of choice in center_octahedrals
 def get_distortion_info(center_octahedrals, octahedral_array, struct):
+    uniqueInPlane = []
+    uniqueOutPlane = []
+    uniqueTilt = []
     for i in range(0, len(center_octahedrals)):
         inPlaneArr = []
         outPlaneArr = []
@@ -206,16 +209,20 @@ def get_distortion_info(center_octahedrals, octahedral_array, struct):
             inPlaneDistortion, outPlaneDistortion, tiltDistortion =\
             calc_DistortionAngles(B_coords, shared_X_coords[j], center_B,\
             struct, j, B_indexes, shared_X_indexes, center_BIndex)
-            inPlaneArr.append(inPlaneDistortion)
-            outPlaneArr.append(outPlaneDistortion)
-            tiltingArr.append(tiltDistortion)
-        avgIn, avgOut, avgTilt, maxInPlane, maxOutPlane, maxTilt, minInPlane, minOutPlane, minTilt = angleStats(inPlaneArr, outPlaneArr, tiltingArr)
+            if inPlaneDistortion not in uniqueInPlane:
+                uniqueInPlane.append(inPlaneDistortion)
+            if outPlaneDistortion not in uniqueOutPlane:
+                uniqueOutPlane.append(outPlaneDistortion)
+            if tiltDistortion not in uniqueTilt:
+                uniqueTilt.append(tiltDistortion)
         bond_distortion = bond_length_distortion(center_octahedrals[i], struct)
+        
 
-        with open('data.csv', 'a', newline = '') as csv_file:
-            data_writer = csv.writer(csv_file, delimiter = ",", quotechar = '"', \
+    with open('data.csv', 'a', newline = '') as csv_file:
+        data_writer = csv.writer(csv_file, delimiter = ",", quotechar = '"', \
                     quoting = csv.QUOTE_MINIMAL)
-            data_writer.writerow([filename, i, avgIn, avgOut, avgTilt, maxInPlane, maxOutPlane, maxTilt, minInPlane, minOutPlane, minTilt, bond_distortion])
+        data_writer.writerow([filename, max(uniqueInPlane), min(uniqueInPlane), \
+                max(uniqueOutPlane), min(uniqueOutPlane), max(uniqueTilt), min(uniqueTilt)])
         
         #*** HAVE TO FINISH UP THIS METHOD!
         #octahedral_elongation = octahedral_elongation(center_octahedrals[i], \
@@ -244,36 +251,6 @@ def octahedral_elongation(center_octahedral_array, sharedXXndexes, struct):
     # np.matrix([[5, 6, 7], [4, 6]]) --> ex. how to create numpy array
     return
 #---------------------------------------------------------------------------
-
-def angleStats(inPlaneAngles, outPlaneAngles, tiltingAngles):
-    maxInPlane, maxOutPlane, maxTilt = 0, 0, 0
-    minInPlane, minOutPlane, minTilt = inPlaneAngles[0], outPlaneAngles[0], tiltingAngles[0]
-    totalInPlane, totalOutPlane, totalTilt = 0, 0, 0
-    for i in range(0, len(inPlaneAngles)):
-        if (inPlaneAngles[i] > maxInPlane):
-            maxInPlane = inPlaneAngles[i]
-        if (outPlaneAngles[i] > maxOutPlane):
-            maxOutPlane = outPlaneAngles[i]
-        if (tiltingAngles[i] > maxTilt):
-            maxTilt = tiltingAngles[i]
-
-    for i in range(0, len(inPlaneAngles)):
-        if (inPlaneAngles[i] < minInPlane):
-            minInPlane = inPlaneAngles[i]
-        if (outPlaneAngles[i] < minOutPlane):
-            minOutPlane = outPlaneAngles[i]
-        if (tiltingAngles[i] < minTilt):
-            minTilt = tiltingAngles[i]
-
-        totalInPlane += inPlaneAngles[i]
-        totalOutPlane += outPlaneAngles[i]
-        totalTilt += tiltingAngles[i]
-    avgIn = totalInPlane / len(inPlaneAngles)
-    avgOut = totalOutPlane / len(outPlaneAngles)
-    avgTilt = totalTilt / len(tiltingAngles)
-    return avgIn, avgOut, avgTilt, maxInPlane, maxOutPlane, maxTilt, minInPlane, \
-            minOutPlane, minTilt
-
 
 # Set the command line arguments to read in B atom and X atom.
 filename = sys.argv[1]

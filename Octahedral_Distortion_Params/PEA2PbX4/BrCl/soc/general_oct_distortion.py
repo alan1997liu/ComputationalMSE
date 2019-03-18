@@ -69,15 +69,11 @@ def calc_DistortionAngles(B_coords, shared_X_coord, center_B, struct, \
     # calculate the angle from the dot product of B-B and the projected
     # B-X vector onto the plane. 
     def BPlane(B_coords):
-        B_v1 = np.subtract(B_coords[index], center_B)
-        B_v2 = np.subtract(B_coords[(index + 1)%len(B_coords)], center_B)
-        B_v3 = np.subtract(B_coords[(index + 2)%len(B_coords)], center_B)
+        B_v1 = np.subtract(B_coords[index], B_coords[(index + 1)%len(B_coords)])
+        B_v2 = np.subtract(B_coords[index], B_coords[(index + 2)%len(B_coords)])
         cross_BVectors = np.cross(B_v1, B_v2)
-        cross_BVectors2 = np.cross(B_v1, B_v3)
-        try:
-            nVect_BPlane = cross_BVectors / linalg.norm(cross_BVectors)
-        except RuntimeWarning:
-            nVect_BPlane = cross_BVectors2 / linalg.norm(cross_BVectors2)
+        #cross_BVectors2 = np.cross(B_v1, B_v3)
+        nVect_BPlane = cross_BVectors / linalg.norm(cross_BVectors)
         return nVect_BPlane
 
     def inPlaneAngle(B_coords, X_coord):
@@ -192,10 +188,11 @@ def get_shared_X(select_octahedral, octahedral_array):
 # This function gets the coordinates of all the B atoms that share an
 # iodine with the center B atom of choice in center_octahedrals
 def get_distortion_info(center_octahedrals, octahedral_array, struct):
-    inPlaneArr = []
-    outPlaneArr = []
-    tiltingArr = []
     for i in range(0, len(center_octahedrals)):
+        inPlaneArr = []
+        outPlaneArr = []
+        tiltingArr = []
+
         #print("Information for octahedral", i + 1)
         B_indexes, shared_X_indexes = get_shared_X(center_octahedrals[i], octahedral_array)
         center_BIndex = center_octahedrals[i][0]
@@ -212,13 +209,13 @@ def get_distortion_info(center_octahedrals, octahedral_array, struct):
             inPlaneArr.append(inPlaneDistortion)
             outPlaneArr.append(outPlaneDistortion)
             tiltingArr.append(tiltDistortion)
-        avgIn, avgOut, avgTilt = angleStats(inPlaneArr, outPlaneArr, tiltingArr)
+        avgIn, avgOut, avgTilt, maxInPlane, maxOutPlane, maxTilt, minInPlane, minOutPlane, minTilt = angleStats(inPlaneArr, outPlaneArr, tiltingArr)
         bond_distortion = bond_length_distortion(center_octahedrals[i], struct)
 
         with open('data.csv', 'a', newline = '') as csv_file:
             data_writer = csv.writer(csv_file, delimiter = ",", quotechar = '"', \
                     quoting = csv.QUOTE_MINIMAL)
-            data_writer.writerow([filename, i, avgIn, avgOut, avgTilt, bond_distortion])
+            data_writer.writerow([filename, i, avgIn, avgOut, avgTilt, maxInPlane, maxOutPlane, maxTilt, minInPlane, minOutPlane, minTilt, bond_distortion])
         
         #*** HAVE TO FINISH UP THIS METHOD!
         #octahedral_elongation = octahedral_elongation(center_octahedrals[i], \
@@ -249,15 +246,33 @@ def octahedral_elongation(center_octahedral_array, sharedXXndexes, struct):
 #---------------------------------------------------------------------------
 
 def angleStats(inPlaneAngles, outPlaneAngles, tiltingAngles):
+    maxInPlane, maxOutPlane, maxTilt = 0, 0, 0
+    minInPlane, minOutPlane, minTilt = inPlaneAngles[0], outPlaneAngles[0], tiltingAngles[0]
     totalInPlane, totalOutPlane, totalTilt = 0, 0, 0
     for i in range(0, len(inPlaneAngles)):
+        if (inPlaneAngles[i] > maxInPlane):
+            maxInPlane = inPlaneAngles[i]
+        if (outPlaneAngles[i] > maxOutPlane):
+            maxOutPlane = outPlaneAngles[i]
+        if (tiltingAngles[i] > maxTilt):
+            maxTilt = tiltingAngles[i]
+
+    for i in range(0, len(inPlaneAngles)):
+        if (inPlaneAngles[i] < minInPlane):
+            minInPlane = inPlaneAngles[i]
+        if (outPlaneAngles[i] < minOutPlane):
+            minOutPlane = outPlaneAngles[i]
+        if (tiltingAngles[i] < minTilt):
+            minTilt = tiltingAngles[i]
+
         totalInPlane += inPlaneAngles[i]
         totalOutPlane += outPlaneAngles[i]
         totalTilt += tiltingAngles[i]
     avgIn = totalInPlane / len(inPlaneAngles)
     avgOut = totalOutPlane / len(outPlaneAngles)
     avgTilt = totalTilt / len(tiltingAngles)
-    return avgIn, avgOut, avgTilt
+    return avgIn, avgOut, avgTilt, maxInPlane, maxOutPlane, maxTilt, minInPlane, \
+            minOutPlane, minTilt
 
 
 # Set the command line arguments to read in B atom and X atom.
