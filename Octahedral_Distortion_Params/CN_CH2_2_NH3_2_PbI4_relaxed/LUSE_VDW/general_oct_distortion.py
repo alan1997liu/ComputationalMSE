@@ -294,6 +294,3 @@ center_octahedrals = get_center_octahedrals(octahedral_array, numUnitCells)
 # The below function will print out all the octahedral distortion
 # parameters of interest in an organized fashion on the terminal.
 get_distortion_info(center_octahedrals, octahedral_array, struct)
-
-#print("End of distortion information")
-#print()
