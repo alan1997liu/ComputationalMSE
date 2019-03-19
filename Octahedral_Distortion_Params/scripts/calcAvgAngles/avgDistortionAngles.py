@@ -280,14 +280,8 @@ filename = sys.argv[1]
 B_atom = sys.argv[2]
 X_atom = sys.argv[3]
 
-# Temporary Testing
-#filename = "Br_1_00001010.vasp"
-#B_atom = "Pb"
-#X_atom = "Br"
-
 struct = vasp.inputs.Poscar.from_file(filename).structure
 B_coordination = 6
-# print("Information for:", filename)
 
 # Supercell the structure. 
 # Xn order to calculate the distortions of all four bonds. You have to
@@ -300,8 +294,7 @@ struct.make_supercell([a, b, c])
 numUnitCells = a*b*c
 supercell_lattice_vectors = struct.lattice
 supercell_species_arr = struct.species
-B_indexes, X_indexes, B_coords, X_coords = getSpeciesInfo(supercell_species_arr, \
-        B_atom, X_atom)
+B_indexes, X_indexes, B_coords, X_coords = getSpeciesInfo(supercell_species_arr, B_atom, X_atom)
 octahedral_array = get_octahedrals(B_indexes, X_indexes, B_coordination)
 center_octahedrals = get_center_octahedrals(octahedral_array, numUnitCells)
 
@@ -310,5 +303,3 @@ center_octahedrals = get_center_octahedrals(octahedral_array, numUnitCells)
 # parameters of interest in an organized fashion on the terminal.
 get_distortion_info(center_octahedrals, octahedral_array, struct)
 
-#print("End of distortion information")
-#print()

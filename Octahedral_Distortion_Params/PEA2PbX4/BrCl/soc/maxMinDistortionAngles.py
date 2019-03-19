@@ -34,11 +34,6 @@ def getSpeciesInfo(species_arr, B_atom, X_atom):
 #---------------------------------------------------------------------------
 # Coordinates are stored in an array, in which each element is also an
 # array that contains the coordinates information.
-# Tried to calculate distance between two atoms that were not in the same
-# unit cell, but still got closest distance. Therefore, no problem, probably.
-## print(struct.get_distance(6, 9))
-## print(struct.get_distance(1, 4))
-## print(struct.get_distance(2, 4))
 # This function gets an octahedral array. The octahedral array is an array
 # containing arrays that have:
 # 1. The center B-index as the first element. 
@@ -113,20 +108,6 @@ def calc_DistortionAngles(B_coords, shared_X_coord, center_B, struct, \
         v1 = np.subtract(center_B , X_atom_on_normal)
         v2 = np.subtract(B_coords[index], X_atom_on_normal)
 
-        # **********First method try!
-        # Now get projection of BX vector (BX_v) onto B-B vector
-        # nVector_BPlane = BPlane(B_coords)
-        # BX_v = np.subtract(X_coord, center_B)
-        # proj_BX_norm = nVector_BPlane * np.dot(BX_v, nVector_BPlane)
-        #B_vector = np.subtract(B_coords[index], center_B)
-        #proj_BX_BBvector = (np.dot(B_vector, BX_v) / (linalg.norm(B_vector)**2))\ * B_vector
-        # Now get position of Xodine that is in the plane that is
-        # perpendicular to the B-B plane
-        #proj_X_outofPlane = np.add(center_B, proj_BX_BBvector, proj_BX_norm)
-        # Now get the angles!
-        #v1 = np.subtract(center_B, proj_X_outofPlane)
-        #v2 = np.subtract(B_coords[index], proj_X_outofPlane)
-
         dot_product = (np.dot(v1, v2) / (linalg.norm(v1)*linalg.norm(v2)))
         try:
             outPlaneAngle = np.arccos(dot_product) * 180 / np.pi
@@ -188,6 +169,9 @@ def get_shared_X(select_octahedral, octahedral_array):
 # This function gets the coordinates of all the B atoms that share an
 # iodine with the center B atom of choice in center_octahedrals
 def get_distortion_info(center_octahedrals, octahedral_array, struct):
+    uniqueInPlane = []
+    uniqueOutPlane = []
+    uniqueTilt = []
     for i in range(0, len(center_octahedrals)):
         inPlaneArr = []
         outPlaneArr = []
@@ -206,16 +190,20 @@ def get_distortion_info(center_octahedrals, octahedral_array, struct):
             inPlaneDistortion, outPlaneDistortion, tiltDistortion =\
             calc_DistortionAngles(B_coords, shared_X_coords[j], center_B,\
             struct, j, B_indexes, shared_X_indexes, center_BIndex)
-            inPlaneArr.append(inPlaneDistortion)
-            outPlaneArr.append(outPlaneDistortion)
-            tiltingArr.append(tiltDistortion)
-        avgIn, avgOut, avgTilt, maxInPlane, maxOutPlane, maxTilt, minInPlane, minOutPlane, minTilt = angleStats(inPlaneArr, outPlaneArr, tiltingArr)
+            if inPlaneDistortion not in uniqueInPlane:
+                uniqueInPlane.append(inPlaneDistortion)
+            if outPlaneDistortion not in uniqueOutPlane:
+                uniqueOutPlane.append(outPlaneDistortion)
+            if tiltDistortion not in uniqueTilt:
+                uniqueTilt.append(tiltDistortion)
         bond_distortion = bond_length_distortion(center_octahedrals[i], struct)
+        
 
-        with open('data.csv', 'a', newline = '') as csv_file:
-            data_writer = csv.writer(csv_file, delimiter = ",", quotechar = '"', \
+    with open('data.csv', 'a', newline = '') as csv_file:
+        data_writer = csv.writer(csv_file, delimiter = ",", quotechar = '"', \
                     quoting = csv.QUOTE_MINIMAL)
-            data_writer.writerow([filename, i, avgIn, avgOut, avgTilt, maxInPlane, maxOutPlane, maxTilt, minInPlane, minOutPlane, minTilt, bond_distortion])
+        data_writer.writerow([filename, max(uniqueInPlane), min(uniqueInPlane), \
+                max(uniqueOutPlane), min(uniqueOutPlane), max(uniqueTilt), min(uniqueTilt)])
         
         #*** HAVE TO FINISH UP THIS METHOD!
         #octahedral_elongation = octahedral_elongation(center_octahedrals[i], \
@@ -245,45 +233,10 @@ def octahedral_elongation(center_octahedral_array, sharedXXndexes, struct):
     return
 #---------------------------------------------------------------------------
 
-def angleStats(inPlaneAngles, outPlaneAngles, tiltingAngles):
-    maxInPlane, maxOutPlane, maxTilt = 0, 0, 0
-    minInPlane, minOutPlane, minTilt = inPlaneAngles[0], outPlaneAngles[0], tiltingAngles[0]
-    totalInPlane, totalOutPlane, totalTilt = 0, 0, 0
-    for i in range(0, len(inPlaneAngles)):
-        if (inPlaneAngles[i] > maxInPlane):
-            maxInPlane = inPlaneAngles[i]
-        if (outPlaneAngles[i] > maxOutPlane):
-            maxOutPlane = outPlaneAngles[i]
-        if (tiltingAngles[i] > maxTilt):
-            maxTilt = tiltingAngles[i]
-
-    for i in range(0, len(inPlaneAngles)):
-        if (inPlaneAngles[i] < minInPlane):
-            minInPlane = inPlaneAngles[i]
-        if (outPlaneAngles[i] < minOutPlane):
-            minOutPlane = outPlaneAngles[i]
-        if (tiltingAngles[i] < minTilt):
-            minTilt = tiltingAngles[i]
-
-        totalInPlane += inPlaneAngles[i]
-        totalOutPlane += outPlaneAngles[i]
-        totalTilt += tiltingAngles[i]
-    avgIn = totalInPlane / len(inPlaneAngles)
-    avgOut = totalOutPlane / len(outPlaneAngles)
-    avgTilt = totalTilt / len(tiltingAngles)
-    return avgIn, avgOut, avgTilt, maxInPlane, maxOutPlane, maxTilt, minInPlane, \
-            minOutPlane, minTilt
-
-
 # Set the command line arguments to read in B atom and X atom.
 filename = sys.argv[1]
 B_atom = sys.argv[2]
 X_atom = sys.argv[3]
-
-# Temporary Testing
-#filename = "Br_1_00001010.vasp"
-#B_atom = "Pb"
-#X_atom = "Br"
 
 struct = vasp.inputs.Poscar.from_file(filename).structure
 B_coordination = 6
