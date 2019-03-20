@@ -9,3 +9,5 @@ for file in *.vasp; do
 	./avgDistortionAngles.py ${file} $B_atom $halide_atom
 done
 
+exit 0
+

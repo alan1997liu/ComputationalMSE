@@ -9,3 +9,4 @@ for file in *.vasp; do
 	./maxMinDistortionAngles.py ${file} $B_atom $halide_atom
 done
 
+exit 0
