@@ -69,7 +69,6 @@ def calc_DistortionAngles(B_coords, shared_X_coord, center_B, struct, \
         B_v1 = np.subtract(B_coords[index], B_coords[(index + 1)%len(B_coords)])
         B_v2 = np.subtract(B_coords[index], B_coords[(index + 2)%len(B_coords)])
         cross_BVectors = np.cross(B_v1, B_v2)
-        #cross_BVectors2 = np.cross(B_v1, B_v3)
         nVect_BPlane = cross_BVectors / linalg.norm(cross_BVectors)
         return nVect_BPlane
 
@@ -211,7 +210,6 @@ def get_distortion_info(center_octahedrals, octahedral_array, struct):
         #octahedral_elongation = octahedral_elongation(center_octahedrals[i], \
                 #sharedXXndexes, struct)
 
-
 def bond_length_distortion(octahedral_array, struct):
     d_m = 0
     bond_length_distortion = 0
@@ -233,6 +231,30 @@ def bond_length_distortion(octahedral_array, struct):
 def octahedral_elongation(center_octahedral_array, sharedXXndexes, struct):
     # np.matrix([[5, 6, 7], [4, 6]]) --> ex. how to create numpy array
     return
+
+def oct_angle_variance(center_octahedrals, struct):
+    # Take the first octahedral only for testing
+    all_angles = []
+    PbIndex = center_octahedrals[0][0]
+    for i in range(1, len(center_octahedrals[0]) - 1):
+        for j in range(i + 1, len(center_octahedrals[0])):
+            all_angles.append(struct.get_angle(center_octahedrals[0][i], PbIndex, \
+                    center_octahedrals[0][j]))
+    oct_angles = heapq.nsmallest(12, all_angles)
+    oct_angles_sum = 0
+    for i in range(0, oct_angles):
+        oct_angles_sum = (oct_angles[i] - 90)**2
+    return oct_angles_sum / 11
+
+    #for i in range(0, len(center_octahedrals)):
+        #oct_angles = []
+        #PbIndex = center_octahedrals[i][0]
+        #for j in range(0, len(center_octahedrals[i])):
+            #for k in range(j, len(center_octahedrals[i])):
+                #oct_angles.append(struct.get_angle(center_octahedrals[i][j], \
+                        #PbIndex, center_octahedrals[i][k]))
+
+
 #---------------------------------------------------------------------------
 
 # Set the command line arguments to read in B atom and X atom.
@@ -263,7 +285,7 @@ center_octahedrals = get_center_octahedrals(octahedral_array, numUnitCells)
 # Function call that outputs things to the terminal
 # The below function will print out all the octahedral distortion
 # parameters of interest in an organized fashion on the terminal.
-get_distortion_info(center_octahedrals, octahedral_array, struct)
 
-#print("End of distortion information")
-#print()
+# get_distortion_info(center_octahedrals, octahedral_array, struct)
+print(oct_angle_variance(center_octahedrals))
+

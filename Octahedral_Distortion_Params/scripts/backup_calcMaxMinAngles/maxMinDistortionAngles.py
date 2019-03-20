@@ -36,9 +36,6 @@ def getSpeciesInfo(species_arr, B_atom, X_atom):
 # array that contains the coordinates information.
 # Tried to calculate distance between two atoms that were not in the same
 # unit cell, but still got closest distance. Therefore, no problem, probably.
-## print(struct.get_distance(6, 9))
-## print(struct.get_distance(1, 4))
-## print(struct.get_distance(2, 4))
 # This function gets an octahedral array. The octahedral array is an array
 # containing arrays that have:
 # 1. The center B-index as the first element. 
@@ -72,7 +69,6 @@ def calc_DistortionAngles(B_coords, shared_X_coord, center_B, struct, \
         B_v1 = np.subtract(B_coords[index], B_coords[(index + 1)%len(B_coords)])
         B_v2 = np.subtract(B_coords[index], B_coords[(index + 2)%len(B_coords)])
         cross_BVectors = np.cross(B_v1, B_v2)
-        #cross_BVectors2 = np.cross(B_v1, B_v3)
         nVect_BPlane = cross_BVectors / linalg.norm(cross_BVectors)
         return nVect_BPlane
 
@@ -112,20 +108,6 @@ def calc_DistortionAngles(B_coords, shared_X_coord, center_B, struct, \
         X_atom_on_normal = np.add(vector_on_normal_plane, center_B)
         v1 = np.subtract(center_B , X_atom_on_normal)
         v2 = np.subtract(B_coords[index], X_atom_on_normal)
-
-        # **********First method try!
-        # Now get projection of BX vector (BX_v) onto B-B vector
-        # nVector_BPlane = BPlane(B_coords)
-        # BX_v = np.subtract(X_coord, center_B)
-        # proj_BX_norm = nVector_BPlane * np.dot(BX_v, nVector_BPlane)
-        #B_vector = np.subtract(B_coords[index], center_B)
-        #proj_BX_BBvector = (np.dot(B_vector, BX_v) / (linalg.norm(B_vector)**2))\ * B_vector
-        # Now get position of Xodine that is in the plane that is
-        # perpendicular to the B-B plane
-        #proj_X_outofPlane = np.add(center_B, proj_BX_BBvector, proj_BX_norm)
-        # Now get the angles!
-        #v1 = np.subtract(center_B, proj_X_outofPlane)
-        #v2 = np.subtract(B_coords[index], proj_X_outofPlane)
 
         dot_product = (np.dot(v1, v2) / (linalg.norm(v1)*linalg.norm(v2)))
         try:
@@ -228,7 +210,6 @@ def get_distortion_info(center_octahedrals, octahedral_array, struct):
         #octahedral_elongation = octahedral_elongation(center_octahedrals[i], \
                 #sharedXXndexes, struct)
 
-
 def bond_length_distortion(octahedral_array, struct):
     d_m = 0
     bond_length_distortion = 0
@@ -250,17 +231,36 @@ def bond_length_distortion(octahedral_array, struct):
 def octahedral_elongation(center_octahedral_array, sharedXXndexes, struct):
     # np.matrix([[5, 6, 7], [4, 6]]) --> ex. how to create numpy array
     return
+
+def oct_angle_variance(center_octahedrals, struct):
+    # Take the first octahedral only for testing
+    all_angles = []
+    PbIndex = center_octahedrals[0][0]
+    for i in range(1, len(center_octahedrals[0]) - 1):
+        for j in range(i + 1, len(center_octahedrals[0])):
+            all_angles.append(struct.get_angle(center_octahedrals[0][i], PbIndex, \
+                    center_octahedrals[0][j]))
+    oct_angles = heapq.nsmallest(12, all_angles)
+    oct_angles_sum = 0
+    for i in range(0, oct_angles):
+        oct_angles_sum = (oct_angles[i] - 90)**2
+    return oct_angles_sum / 11
+
+    #for i in range(0, len(center_octahedrals)):
+        #oct_angles = []
+        #PbIndex = center_octahedrals[i][0]
+        #for j in range(0, len(center_octahedrals[i])):
+            #for k in range(j, len(center_octahedrals[i])):
+                #oct_angles.append(struct.get_angle(center_octahedrals[i][j], \
+                        #PbIndex, center_octahedrals[i][k]))
+
+
 #---------------------------------------------------------------------------
 
 # Set the command line arguments to read in B atom and X atom.
 filename = sys.argv[1]
 B_atom = sys.argv[2]
 X_atom = sys.argv[3]
-
-# Temporary Testing
-#filename = "Br_1_00001010.vasp"
-#B_atom = "Pb"
-#X_atom = "Br"
 
 struct = vasp.inputs.Poscar.from_file(filename).structure
 B_coordination = 6
@@ -285,7 +285,7 @@ center_octahedrals = get_center_octahedrals(octahedral_array, numUnitCells)
 # Function call that outputs things to the terminal
 # The below function will print out all the octahedral distortion
 # parameters of interest in an organized fashion on the terminal.
-get_distortion_info(center_octahedrals, octahedral_array, struct)
 
-#print("End of distortion information")
-#print()
+# get_distortion_info(center_octahedrals, octahedral_array, struct)
+print(oct_angle_variance(center_octahedrals))
+
