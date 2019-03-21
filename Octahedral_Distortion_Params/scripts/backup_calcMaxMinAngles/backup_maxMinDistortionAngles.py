@@ -199,12 +199,14 @@ def get_distortion_info(center_octahedrals, octahedral_array, struct):
                 uniqueTilt.append(tiltDistortion)
         bond_distortion = bond_length_distortion(center_octahedrals[i], struct)
         
+    octAngleVariances = oct_angle_variance(center_octahedrals, struct)
 
     with open('data.csv', 'a', newline = '') as csv_file:
         data_writer = csv.writer(csv_file, delimiter = ",", quotechar = '"', \
                     quoting = csv.QUOTE_MINIMAL)
         data_writer.writerow([filename, max(uniqueInPlane), min(uniqueInPlane), \
-                max(uniqueOutPlane), min(uniqueOutPlane), max(uniqueTilt), min(uniqueTilt)])
+                max(uniqueOutPlane), min(uniqueOutPlane), max(uniqueTilt), \
+                min(uniqueTilt), max(octAngleVariances), min(octAngleVariances)])
         
         #*** HAVE TO FINISH UP THIS METHOD!
         #octahedral_elongation = octahedral_elongation(center_octahedrals[i], \
@@ -233,27 +235,22 @@ def octahedral_elongation(center_octahedral_array, sharedXXndexes, struct):
     return
 
 def oct_angle_variance(center_octahedrals, struct):
-    # Take the first octahedral only for testing
-    all_angles = []
-    PbIndex = center_octahedrals[0][0]
-    for i in range(1, len(center_octahedrals[0]) - 1):
-        for j in range(i + 1, len(center_octahedrals[0])):
-            all_angles.append(struct.get_angle(center_octahedrals[0][i], PbIndex, \
-                    center_octahedrals[0][j]))
-    oct_angles = heapq.nsmallest(12, all_angles)
-    oct_angles_sum = 0
-    for i in range(0, oct_angles):
-        oct_angles_sum = (oct_angles[i] - 90)**2
-    return oct_angles_sum / 11
-
-    #for i in range(0, len(center_octahedrals)):
-        #oct_angles = []
-        #PbIndex = center_octahedrals[i][0]
-        #for j in range(0, len(center_octahedrals[i])):
-            #for k in range(j, len(center_octahedrals[i])):
-                #oct_angles.append(struct.get_angle(center_octahedrals[i][j], \
-                        #PbIndex, center_octahedrals[i][k]))
-
+    # Calculate the max and min octahedral angle variance of the 4 octahedrals
+    oct_angles = []
+    for i in range(0, len(center_octahedrals)):
+        all_angles = []
+        PbIndex = center_octahedrals[i][0]
+        for j in range(1, len(center_octahedrals[i]) - 1):
+            for k in range(j + 1, len(center_octahedrals[i])):
+                all_angles.append(struct.get_angle(center_octahedrals[i][j], \
+                        PbIndex, center_octahedrals[i][k]))
+        oct_angles = heapq.nsmallest(12, all_angles)
+        oct_angles_sum = 0
+        for angle in oct_angles:
+            oct_angles_sum += (angle - 90)**2
+        oct_angle_distortion = oct_angles_sum / 11
+        oct_angles.append(oct_angle_distortion)
+    return oct_angles
 
 #---------------------------------------------------------------------------
 
@@ -286,6 +283,5 @@ center_octahedrals = get_center_octahedrals(octahedral_array, numUnitCells)
 # The below function will print out all the octahedral distortion
 # parameters of interest in an organized fashion on the terminal.
 
-# get_distortion_info(center_octahedrals, octahedral_array, struct)
-print(oct_angle_variance(center_octahedrals))
+get_distortion_info(center_octahedrals, octahedral_array, struct)
 
