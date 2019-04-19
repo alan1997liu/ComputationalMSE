@@ -285,4 +285,3 @@ center_octahedrals = get_center_octahedrals(octahedral_array, numUnitCells)
 
 get_distortion_info(center_octahedrals, octahedral_array, struct)
 
-
