@@ -208,7 +208,7 @@ def get_distortion_info(center_octahedrals, octahedral_array, struct):
                 max(uniqueOutPlane), min(uniqueOutPlane), max(uniqueTilt), \
                 min(uniqueTilt), max(octAngleVariances), min(octAngleVariances)])
         
-        #*** HAVE TO FINISH UP THIS METHOD!
+        #*** HAVE TO FINISH UP THIS METHOD down below.
         #octahedral_elongation = octahedral_elongation(center_octahedrals[i], \
                 #sharedXXndexes, struct)
 
@@ -231,6 +231,7 @@ def bond_length_distortion(octahedral_array, struct):
 # height. Or use formula from this website:
 # https://iopscience.iop.org/article/10.1070/RM1995v050n05ABEH002620/pdf
 def octahedral_elongation(center_octahedral_array, sharedXXndexes, struct):
+    
     # np.matrix([[5, 6, 7], [4, 6]]) --> ex. how to create numpy array
     return
 
@@ -251,6 +252,32 @@ def oct_angle_variance(center_octahedrals, struct):
         oct_angle_distortion = oct_angles_sum / 11
         oct_angles.append(oct_angle_distortion)
     return oct_angles
+
+
+# Computes halide_distance_deviation. Specify: top_Halide, bottom_Halide, and 
+# inPlane_Halides, and give the struct to perform operations. 
+def halide_distance_deviation(top_Halide, bottom_Halide, inPlane_Halides, struct):
+    all_halide_distances = []
+    for i in range(0, len(inPlane_Halides)):
+        topHalide_Distance = struct.get_distance(top_Halide, inPlane_Halides[i])
+        bottomHalide_Distance = struct.get_distance(bottom_Halide, inPlane_Halides[i])
+        all_halide_distances.append(topHalide_Distance)
+        all_halide_distances.append(bottomHalide_Distance)
+    for j in range(0, len(inPlane_Halides - 1)):
+        distance = struct.get_distance(inPlaneHalides[i], inPlaneHalides[i+1])
+        all_halide_distances.append(distance)
+
+    mean_distance = 0
+    for k in range(0, len(all_halide_distances)):
+        mean_distance += all_halide_distances[k]
+    mean_distance = mean_distance / len(all_halide_distances)
+
+    halide_distance_deviation = 0
+    for l in range(0, len(all_halide_distances)):
+        variation = (all_halide_distances[i] - mean_distance) * mean_distance / 12
+        halide_distance_deviation += variation
+
+    return halide_distance_deviation
 
 #---------------------------------------------------------------------------
 
@@ -284,5 +311,4 @@ center_octahedrals = get_center_octahedrals(octahedral_array, numUnitCells)
 # parameters of interest in an organized fashion on the terminal.
 
 get_distortion_info(center_octahedrals, octahedral_array, struct)
-
 
