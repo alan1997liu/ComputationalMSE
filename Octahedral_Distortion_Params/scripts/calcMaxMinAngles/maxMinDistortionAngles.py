@@ -306,6 +306,11 @@ B_indexes, X_indexes, B_coords, X_coords = getSpeciesInfo(supercell_species_arr,
 octahedral_array = get_octahedrals(B_indexes, X_indexes, B_coordination)
 center_octahedrals = get_center_octahedrals(octahedral_array, numUnitCells)
 
+print(B_coords)
+
+# Calculate parameters for halide distance deviation:
+    # Top Halide, Bottom Halide, inPlane halides
+
 # Function call that outputs things to the terminal
 # The below function will print out all the octahedral distortion
 # parameters of interest in an organized fashion on the terminal.

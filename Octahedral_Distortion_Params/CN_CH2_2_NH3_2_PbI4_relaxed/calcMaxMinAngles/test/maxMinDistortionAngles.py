@@ -173,11 +173,11 @@ def get_distortion_info(center_octahedrals, octahedral_array, struct):
     uniqueInPlane = []
     uniqueOutPlane = []
     uniqueTilt = []
-    bondDistortionArray = []
     for i in range(0, len(center_octahedrals)):
         inPlaneArr = []
         outPlaneArr = []
         tiltingArr = []
+        bondDistortionArray = []
 
         #print("Information for octahedral", i + 1)
         B_indexes, shared_X_indexes = get_shared_X(center_octahedrals[i], octahedral_array)
@@ -200,11 +200,12 @@ def get_distortion_info(center_octahedrals, octahedral_array, struct):
                 uniqueTilt.append(tiltDistortion)
         bond_distortion = bond_length_distortion(center_octahedrals[i], struct)
         bondDistortionArray.append(bond_distortion)
-
+        
     octAngleVariances = oct_angle_variance(center_octahedrals, struct)
     avgBondDistortion = 0
     for bondDistortion in bondDistortionArray: 
         avgBondDistortion += bondDistortion / len(bondDistortionArray)
+
 
     with open('data.csv', 'a', newline = '') as csv_file:
         data_writer = csv.writer(csv_file, delimiter = ",", quotechar = '"', \
@@ -290,4 +291,5 @@ center_octahedrals = get_center_octahedrals(octahedral_array, numUnitCells)
 # parameters of interest in an organized fashion on the terminal.
 
 get_distortion_info(center_octahedrals, octahedral_array, struct)
+
 
