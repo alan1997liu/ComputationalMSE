@@ -254,19 +254,43 @@ def oct_angle_variance(center_octahedrals, struct):
     return oct_angles
 
 
-# Computes halide_distance_deviation. Specify: top_Halide, bottom_Halide, and 
-# inPlane_Halides, and give the struct to perform operations. 
-def halide_distance_deviation(top_Halide, bottom_Halide, inPlane_Halides, struct):
+# Computes halide_distance_deviation. 
+# Things to input: provide struct. 
+def avgHalideDistance_halideDistanceDeviation(center_octahedral, struct):
+    # Specify the halides, topHalide, bottomHalide for calculation. 
+    cation = center_octahedral[0]
+    # Halides are all the rest of the atoms. 
+    topHalide = center_octahedral[1]
+    otherHalides_Index = center_octahedral[2:]
+
+    # Pick the first halide of the halide array.
+    # Find the halide that is on the other side: Pick halide that has the greatest
+    # distance from the first halide, basically. 
+    maxDistance = 0
+    bottomHalide = float('inf')
+
+    for otherHalide_Index in otherHalides_Index: 
+        distance = struct.get_distance(topHalide, otherHalide_Index)
+        if (distance > maxDistance):
+            maxDistance = distance
+            bottomhalide = otherHalide_Index
+
+    inPlane_Halides = []
+    for otherHalide_Index in otherHalides_Index:
+        if (otherHalide_Index != bottomHalide):
+            inPlane_Halides.append(otherHalide_Index) 
+
+    # Now, we have specified inPlane_Halides, topHalide, bottomHalide.
+    # Now calculate the mean_halide_distance and halide_distance_deviation. 
     all_halide_distances = []
     for i in range(0, len(inPlane_Halides)):
-        topHalide_Distance = struct.get_distance(top_Halide, inPlane_Halides[i])
-        bottomHalide_Distance = struct.get_distance(bottom_Halide, inPlane_Halides[i])
+        topHalide_Distance = struct.get_distance(topHalide, inPlane_Halides[i])
+        bottomHalide_Distance = struct.get_distance(bottomHalide, inPlane_Halides[i])
         all_halide_distances.append(topHalide_Distance)
         all_halide_distances.append(bottomHalide_Distance)
     for j in range(0, len(inPlane_Halides - 1)):
         distance = struct.get_distance(inPlaneHalides[i], inPlaneHalides[i+1])
         all_halide_distances.append(distance)
-
     mean_distance = 0
     for k in range(0, len(all_halide_distances)):
         mean_distance += all_halide_distances[k]
@@ -277,7 +301,8 @@ def halide_distance_deviation(top_Halide, bottom_Halide, inPlane_Halides, struct
         variation = (all_halide_distances[i] - mean_distance) * mean_distance / 12
         halide_distance_deviation += variation
 
-    return halide_distance_deviation
+    # Returns the average halide distance and halide distance deviation. 
+    return mean_distance, halide_distance_deviation
 
 #---------------------------------------------------------------------------
 # Integrate loop so files all get looped over. 
