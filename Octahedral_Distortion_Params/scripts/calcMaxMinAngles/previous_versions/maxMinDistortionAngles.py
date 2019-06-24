@@ -280,7 +280,6 @@ def halide_distance_deviation(top_Halide, bottom_Halide, inPlane_Halides, struct
     return halide_distance_deviation
 
 #---------------------------------------------------------------------------
-
 # Set the command line arguments to read in B atom and X atom.
 filename = sys.argv[1]
 B_atom = sys.argv[2]
